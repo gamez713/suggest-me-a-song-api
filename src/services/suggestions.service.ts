@@ -7,6 +7,14 @@ export async function getAllSuggestions(): Promise<SongSuggestion[]> {
     return JSON.parse(data);
 }
 
+export async function getSuggestionbyId(id: number): Promise<SongSuggestion | null> {
+    const suggestions = await getAllSuggestions();
+
+    const suggestion = suggestions.find((suggestion) => suggestion.id === id) || null;
+
+    return suggestion;
+}
+
 export async function createSuggestion(input: {
     title: string;
     artist: string;
