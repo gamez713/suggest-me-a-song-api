@@ -78,3 +78,21 @@ export async function updateSuggestionStatus(id: number, status: SongStatus): Pr
 }
 
 // DELETE operations
+export async function deleteSuggestion(id: number): Promise<boolean> {
+    const suggestions = await getAllSuggestions();
+
+    // Filter out the suggestion with the given id
+    const filteredSuggestions = suggestions.filter((suggestion) => suggestion.id !== id);
+
+    // If no suggestion was removed, return false
+    if (filteredSuggestions.length === suggestions.length) {
+        return false;
+    }
+
+    await fs.writeFile(
+        "data/suggestions.json",
+        JSON.stringify(filteredSuggestions, null, 2)
+    );
+
+    return true;
+}

@@ -1,6 +1,12 @@
 import type { Request, Response } from 'express';
-import { createSuggestion, getAllSuggestions, getSuggestionById, updateSuggestionStatus} from '../services/suggestions.service.js';
 import type { SongStatus } from '../models/SongSuggestion.js';
+import {
+    createSuggestion,
+    getAllSuggestions,
+    getSuggestionById,
+    updateSuggestionStatus,
+    deleteSuggestion
+} from '../services/suggestions.service.js';
 
 // CREATE operations
 export async function createSuggestionHandler(req: Request, res: Response) {
@@ -95,4 +101,22 @@ export async function updateSuggestionStatusHandler(req: Request, res: Response)
         return res.status(404).json({ error: "Suggestion not found" });
     }
     return res.status(200).json(updatedSuggestion);
+}
+
+// DELETE operations
+export async function deleteSuggestionHandler(req: Request, res: Response) {
+    const id = parseInt(req.params.id as string, 10);
+
+    // Validate id
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid id parameter" });
+    }
+
+    const deleted = await deleteSuggestion(id);
+
+    if (!deleted) {
+        return res.status(404).json({ error: "Suggestion not found" });
+    }
+
+    return res.status(204).send();
 }
