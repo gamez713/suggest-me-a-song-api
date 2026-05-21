@@ -1,31 +1,8 @@
 import type { Request, Response } from 'express';
-import { getAllSuggestions, getSuggestionbyId, createSuggestion} from '../services/suggestions.service.js';
+import { createSuggestion, getAllSuggestions, getSuggestionById, updateSuggestionStatus} from '../services/suggestions.service.js';
+import type { SongStatus } from '../models/SongSuggestion.js';
 
-export async function getSuggestions(req: Request, res: Response) {
-    // Get all suggestions from service
-    const suggestions = await getAllSuggestions();
-
-    return res.status(200).json(suggestions);
-}
-
-export async function getSuggestionbyIdHandler(req: Request, res: Response) {
-    const id = parseInt(req.params.id as string, 10);
-
-    // Validate id
-    if (isNaN(id)) {
-        return res.status(400).json({ error: "Invalid id parameter" });
-    }
-
-    // Get suggestion by id from service
-    const suggestion = await getSuggestionbyId(id);
-
-    if (!suggestion) {
-        return res.status(404).json({ error: "Suggestion not found" });
-    }
-
-    return res.status(200).json(suggestion);
-}
-
+// CREATE operations
 export async function createSuggestionHandler(req: Request, res: Response) {
     const { title, artist, message } = req.body;
 
@@ -41,7 +18,6 @@ export async function createSuggestionHandler(req: Request, res: Response) {
         return res.status(400).json({ error: "Message must be a string" });
     }
 
-    // Trim inputs
     const trimmedTitle = title.trim();
     const trimmedArtist = artist.trim();
     const trimmedMessage = message?.trim();
@@ -67,4 +43,56 @@ export async function createSuggestionHandler(req: Request, res: Response) {
     });
 
     return res.status(201).json(newSuggestion);
+}
+
+// READ operations
+export async function getSuggestionsHandler(req: Request, res: Response) {
+    const suggestions = await getAllSuggestions();
+
+    return res.status(200).json(suggestions);
+}
+
+export async function getSuggestionbyIdHandler(req: Request, res: Response) {
+    const id = parseInt(req.params.id as string, 10);
+
+    // Validate id
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid id parameter" });
+    }
+
+    // Get suggestion by id from service
+    const suggestion = await getSuggestionById(id);
+
+    if (!suggestion) {
+        return res.status(404).json({ error: "Suggestion not found" });
+    }
+
+    return res.status(200).json(suggestion);
+}
+
+// UPDATE operations
+export async function updateSuggestionStatusHandler(req: Request, res: Response) {
+    const id = parseInt(req.params.id as string, 10);
+    const { status } = req.body;
+    const validStatuses: SongStatus[] = ["pending", "approved", "rejected"];
+
+    // Validate id
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid id parameter" });
+    }
+
+    // Validate status
+    if (typeof status !== "string" || !validStatuses.includes(status as SongStatus)) {
+        return res.status(400).json({ error: "Invalid status value" });
+    }
+
+    const validatedStatus = status as SongStatus;
+
+    // Update suggestion status in service
+    const updatedSuggestion = await updateSuggestionStatus(id, validatedStatus);
+
+    if (!updatedSuggestion) {
+        return res.status(404).json({ error: "Suggestion not found" });
+    }
+    return res.status(200).json(updatedSuggestion);
 }
