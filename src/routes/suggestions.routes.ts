@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import {
     createSuggestionHandler,
-    getSuggestionsHandler, getSuggestionbyIdHandler,
+    getSuggestionsHandler,
+    getSuggestionbyIdHandler,
     updateSuggestionStatusHandler,
     deleteSuggestionHandler
 } from '../controllers/suggestions.controller.js';

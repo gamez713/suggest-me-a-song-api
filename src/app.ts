@@ -1,5 +1,6 @@
 import express from "express";
 import suggestionsRoutes from "./routes/suggestions.routes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
@@ -13,5 +14,8 @@ app.get("/", (req, res) => {
 
 // Routes
 app.use("/suggestions", suggestionsRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 export default app;
