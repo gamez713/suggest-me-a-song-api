@@ -1,12 +1,12 @@
-import type { Request, Response } from 'express';
-import type { SongStatus } from '../models/SongSuggestion.js';
+import type { Request, Response } from "express";
+import type { SongStatus } from "../models/SongSuggestion.js";
 import {
     createSuggestion,
     getAllSuggestions,
     getSuggestionById,
     updateSuggestionStatus,
     deleteSuggestion
-} from '../services/suggestions.service.js';
+} from "../services/suggestions.service.js";
 
 // CREATE operations
 export async function createSuggestionHandler(req: Request, res: Response) {

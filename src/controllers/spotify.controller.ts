@@ -1,9 +1,9 @@
-import type { Request, Response, NextFunction} from 'express';
+import type { Request, Response, NextFunction} from "express";
 import {
   exchangeSpotifyCodeForToken,
   getSpotifyAuthorizeUrl,
   validateSpotifyAuthState,
-} from '../services/spotify.service.js';
+} from "../services/spotify.service.js";
 
 // Redirects the user to Spotify's authorization page
 export function loginHandler(_req: Request, res: Response, next: NextFunction) {
