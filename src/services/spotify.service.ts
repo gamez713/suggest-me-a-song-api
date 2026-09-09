@@ -99,3 +99,25 @@ export function getStoredSpotifyAccessToken(): string | null {
 export function getStoredSpotifyRefreshToken(): string | null {
     return spotifyRefreshToken;
 }
+
+// Unknown promise here for now during development
+export async function getSpotifyTrack(trackId: string): Promise<unknown> {
+    const accessToken = getStoredSpotifyAccessToken();
+
+    if (!accessToken) {
+        throw new Error("Spotify access token is not available. Authorize with Spotify first.");
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Spotify track request failed: ${response.status} ${errorText}`);
+    }
+
+    return response.json();
+}

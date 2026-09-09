@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction} from "express";
 import {
   exchangeSpotifyCodeForToken,
   getSpotifyAuthorizeUrl,
+    getSpotifyTrack,
   validateSpotifyAuthState,
 } from "../services/spotify.service.js";
 
@@ -37,6 +38,21 @@ export async function callbackHandler(req: Request, res: Response, next: NextFun
         return res.status(200).json({
             message: "Spotify authorization successful",
         });
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export async function getTrackHandler(req: Request, res: Response, next: NextFunction) {
+    const { trackId } = req.params;
+
+    if (!trackId || typeof trackId !== "string" || trackId.trim() === "") {
+        return res.status(400).json({ error: "Missing or invalid track ID" });
+    }
+
+    try {
+        const track = await getSpotifyTrack(trackId);
+        return res.status(200).json(track);
     } catch (error) {
         return next(error);
     }
