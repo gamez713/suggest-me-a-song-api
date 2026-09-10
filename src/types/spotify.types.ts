@@ -27,3 +27,9 @@ export type SpotifyTrackResponse = {
     explicit: boolean;
     popularity: number;
 };
+
+export type SpotifyTrackSearchResponse = {
+    tracks: {
+        items: SpotifyTrackResponse[];
+    };
+};

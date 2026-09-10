@@ -1,9 +1,10 @@
 import type { Request, Response, NextFunction} from "express";
 import {
-  exchangeSpotifyCodeForToken,
-  getSpotifyAuthorizeUrl,
+    exchangeSpotifyCodeForToken,
+    getSpotifyAuthorizeUrl,
     getSpotifyTrack,
-  validateSpotifyAuthState,
+    searchSpotifyTracks,
+    validateSpotifyAuthState,
 } from "../services/spotify.service.js";
 
 // Redirects the user to Spotify's authorization page
@@ -53,6 +54,21 @@ export async function getTrackHandler(req: Request, res: Response, next: NextFun
     try {
         const track = await getSpotifyTrack(trackId);
         return res.status(200).json(track);
+    } catch (error) {
+        return next(error);
+    }
+}
+
+export async function searchTracksHandler(req: Request, res: Response, next: NextFunction) {
+    const { q } = req.query;
+
+    if (typeof q !== "string" || q.trim() === "") {
+        return res.status(400).json({ error: "Missing or invalid 'q' query parameter" });
+    }
+
+    try {
+        const tracks = await searchSpotifyTracks(q.trim());
+        return res.status(200).json(tracks);
     } catch (error) {
         return next(error);
     }

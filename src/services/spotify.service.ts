@@ -1,7 +1,11 @@
 import { randomBytes } from "node:crypto";
-import type { SpotifyTrackMetadata } from "../models/spotifyTrack.mode.js";
+import type {
+    SpotifyTrackMetadata,
+    SpotifyTrackSearchResult,
+} from "../models/spotifyTrack.model.js";
 import type {
     SpotifyTokenResponse,
+    SpotifyTrackSearchResponse,
     SpotifyTrackResponse,
 } from "../types/spotify.types.js";
 
@@ -134,4 +138,48 @@ export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrackMeta
         explicit: spotifyTrack.explicit,
         popularity: spotifyTrack.popularity,
     };
+}
+
+export async function searchSpotifyTracks(
+    query: string
+): Promise<SpotifyTrackSearchResult[]> {
+    const accessToken = getStoredSpotifyAccessToken();
+
+    if (!accessToken) {
+        throw new Error("Spotify access token is not available. Authorize with Spotify first.");
+    }
+
+    const params = new URLSearchParams({
+        q: query,
+        type: "track",
+        limit: "10",
+    });
+
+    const response = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Spotify track search failed: ${response.status} ${errorText}`);
+    }
+
+    const searchResponse = (await response.json()) as SpotifyTrackSearchResponse;
+
+    return searchResponse.tracks.items.map((track) => ({
+        spotifyTrackId: track.id,
+        name: track.name,
+        artists: track.artists.map((artist) => ({
+            id: artist.id,
+            name: artist.name,
+        })),
+        album: {
+            id: track.album.id,
+            name: track.album.name,
+            imageUrl: track.album.images[0]?.url ?? null,
+        },
+        spotifyUrl: track.external_urls.spotify,
+    }));
 }
