@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { SongStatus } from "../models/SongSuggestion.js";
+import type { SongStatus } from "../models/songSuggestion.model.js";
 import {
     createSuggestion,
     getAllSuggestions,

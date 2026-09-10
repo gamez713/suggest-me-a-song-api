@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import type { SongSuggestion, SongStatus } from "../models/SongSuggestion.js";
+import type { SongSuggestion, SongStatus } from "../models/songSuggestion.model.js";
 
 // CREATE operations
 export async function createSuggestion(input: {

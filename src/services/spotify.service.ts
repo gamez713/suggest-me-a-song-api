@@ -1,12 +1,9 @@
 import { randomBytes } from "node:crypto";
-
-export type SpotifyTokenResponse = {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-    refresh_token?: string;
-    scope?: string;
-};
+import type { SpotifyTrackMetadata } from "../models/spotifyTrack.mode.js";
+import type {
+    SpotifyTokenResponse,
+    SpotifyTrackResponse,
+} from "../types/spotify.types.js";
 
 let spotifyAuthState: string | null = null;
 
@@ -100,8 +97,7 @@ export function getStoredSpotifyRefreshToken(): string | null {
     return spotifyRefreshToken;
 }
 
-// Unknown promise here for now during development
-export async function getSpotifyTrack(trackId: string): Promise<unknown> {
+export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrackMetadata> {
     const accessToken = getStoredSpotifyAccessToken();
 
     if (!accessToken) {
@@ -119,5 +115,23 @@ export async function getSpotifyTrack(trackId: string): Promise<unknown> {
         throw new Error(`Spotify track request failed: ${response.status} ${errorText}`);
     }
 
-    return response.json();
+    const spotifyTrack = (await response.json()) as SpotifyTrackResponse;
+
+    return {
+        spotifyTrackId: spotifyTrack.id,
+        name: spotifyTrack.name,
+        artists: spotifyTrack.artists.map((artist) => ({
+            id: artist.id,
+            name: artist.name,
+        })),
+        album: {
+            id: spotifyTrack.album.id,
+            name: spotifyTrack.album.name,
+            imageUrl: spotifyTrack.album.images[0]?.url ?? null,
+        },
+        spotifyUrl: spotifyTrack.external_urls.spotify,
+        durationMs: spotifyTrack.duration_ms,
+        explicit: spotifyTrack.explicit,
+        popularity: spotifyTrack.popularity,
+    };
 }
