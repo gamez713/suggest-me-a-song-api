@@ -1,26 +1,16 @@
 [
   {
     "id": 1,
-    "title": "Love Yourz",
-    "artist": "J. Cole",
-    "message": "No such thing as a life that's better than yours",
-    "status": "approved",
-    "createdAt": "2026-05-19T14:42:21.601Z"
+    "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
+    "status": "pending",
+    "createdAt": "2026-09-16T00:37:15.013Z",
+    "message": "First suggestion"
   },
   {
     "id": 2,
-    "title": "Lose Yourself",
-    "artist": "Eminem",
+    "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
     "status": "pending",
-    "createdAt": "2026-05-21T18:10:53.168Z",
-    "message": "One of the greatest rap songs ever made"
-  },
-  {
-    "id": 3,
-    "title": "Mr. Rager",
-    "artist": "Kid Cudi",
-    "status": "pending",
-    "createdAt": "2026-05-26T23:54:16.738Z",
-    "message": "Dope Song"
+    "createdAt": "2026-09-16T00:40:40.255Z",
+    "message": "Second suggestion"
   }
 ]

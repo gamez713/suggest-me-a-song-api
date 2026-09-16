@@ -1,0 +1,21 @@
+[
+  {
+    "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
+    "name": "Vanished",
+    "artists": [
+      {
+        "id": "7K3zpFXBvPcvzhj7zlGJdO",
+        "name": "Crystal Castles"
+      }
+    ],
+    "album": {
+      "id": "6rTfUUv8Kefr6Uo3AaecXi",
+      "name": "Crystal Castles",
+      "imageUrl": "https://i.scdn.co/image/ab67616d0000b273379438a3e296d1d19bf8515f"
+    },
+    "spotifyUrl": "https://open.spotify.com/track/4bQ7mjty0UVlKRalhizpGT",
+    "durationMs": 242960,
+    "explicit": false,
+    "popularity": 82
+  }
+]
