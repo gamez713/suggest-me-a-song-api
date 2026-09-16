@@ -1,59 +1,64 @@
 import app from "../src/app.js";
 import request from "supertest";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("../src/services/spotify.service.js", () => ({
+    getSpotifyTrack: vi.fn().mockResolvedValue({
+        spotifyTrackId: "test-track-id",
+        name: "Test Song",
+        artists: [
+            {
+                id: "test-artist-id",
+                name: "Test Artist",
+            },
+        ],
+        album: {
+            id: "test-album-id",
+            name: "Test Album",
+            imageUrl: null,
+        },
+        spotifyUrl: "https://open.spotify.com/track/test-track-id",
+        durationMs: 200000,
+        explicit: false,
+        popularity: 50,
+    }),
+}));
 
 describe("POST /suggestions", () => {
     it("creates a new suggestion", async () => {
         const response = await request(app).post("/suggestions").send({
-            title: "POST Test Song",
-            artist: "POST Test Artist",
+            spotifyTrackId: "test-track-id",
             message: "This is a test suggestion for POST endpoint"
         });
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty("id");
-        expect(response.body).toHaveProperty("title", "POST Test Song");
-        expect(response.body).toHaveProperty("artist", "POST Test Artist");
+        expect(response.body).toHaveProperty("spotifyTrackId", "test-track-id");
         expect(response.body).toHaveProperty("message", "This is a test suggestion for POST endpoint");
         expect(response.body).toHaveProperty("status", "pending");
+        expect(response.body).toHaveProperty("createdAt");
     });
 
     // Missing required fields
-    it("returns 400 if artist is missing", async () => {
+    it("returns 400 if spotifyTrackId is missing", async () => {
         const response = await request(app).post("/suggestions").send({
-            title: "POST Test Song"
+            message: "This is a test suggestion for POST endpoint"
         });
         expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist are required");
-    });
-    it("returns 400 if title is missing", async () => {
-        const response = await request(app).post("/suggestions").send({
-            artist: "POST Test Artist"
-        });
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist are required");
+        expect(response.body).toHaveProperty("error", "Spotify track ID is required");
     });
 
     // Type validation
-    it("returns 400 if artist is not a string", async () => {
+    it("returns 400 if spotifyTrackId is not a string", async () => {
         const response = await request(app).post("/suggestions").send({
-            artist: 123,
-            title: "POST Test Song"
+            spotifyTrackId: 123,
+            message: "This is a test suggestion for POST endpoint"
         });
         expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist must be strings");
-    });
-    it("returns 400 if title is not a string", async () => {
-        const response = await request(app).post("/suggestions").send({
-            artist: "POST Test Artist",
-            title: 123
-        });
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist must be strings");
+        expect(response.body).toHaveProperty("error", "Spotify track ID must be a string");
     });
     it("returns 400 if message is not a string", async () => {
         const response = await request(app).post("/suggestions").send({
-            artist: "POST Test Artist",
-            title: "POST Test Song",
+            spotifyTrackId: "test-track-id",
             message: 123
         });
         expect(response.status).toBe(400);
@@ -61,67 +66,73 @@ describe("POST /suggestions", () => {
     });
 
     // Empty string validation
-    it("returns 400 if artist is an empty string", async () => {
+    it("returns 400 if spotifyTrackId is an empty string", async () => {
         const response = await request(app).post("/suggestions").send({
-            artist: " ",
-            title: "Test Song"
+            spotifyTrackId: " ",
+            message: "This is a test suggestion for POST endpoint"
         });
         expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist cannot be empty");
-    });
-    it("returns 400 if title is an empty string", async () => {
-        const response = await request(app).post("/suggestions").send({
-            artist: "Test Artist",
-            title: " "
-        });
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist cannot be empty");
+        expect(response.body).toHaveProperty("error", "Spotify track ID cannot be empty");
     });
 
     // Length validation
-    it("returns 400 if artist exceeds maximum length", async () => {
-        const longArtist = "A".repeat(101);
-        const response = await request(app).post("/suggestions").send({
-            artist: longArtist,
-            title: "Test Song"
-        });
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist exceed maximum length");
-    });
-    it("returns 400 if  title exceeds maximum length", async () => {
-        const longTitle = "A".repeat(101);
-        const response = await request(app).post("/suggestions").send({
-            artist: "Test Artist",
-            title: longTitle
-        });
-        expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty("error", "Title and artist exceed maximum length");
-    });
     it("returns 400 if message exceeds maximum length", async () => {
         const longMessage = "A".repeat(501);
         const response = await request(app).post("/suggestions").send({
-            artist: "Test Artist",
-            title: "Test Song",
+            spotifyTrackId: "test-track-id",
             message: longMessage
         });
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error", "Message exceeds maximum length");
     })
+
+    // Optional field validation
+    it("creates a new suggestion without a message", async () => {
+    const response = await request(app).post("/suggestions").send({
+        spotifyTrackId: "test-track-id"
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("id");
+    expect(response.body).toHaveProperty("spotifyTrackId", "test-track-id");
+    expect(response.body).toHaveProperty("status", "pending");
+    expect(response.body).toHaveProperty("createdAt");
+    expect(response.body).not.toHaveProperty("message");
+});
 });
 
 describe("GET /suggestions", () => {
     it("returns an array of suggestions", async () => {
+        // Create a new suggestion to test on
+        const createResponse = await request(app).post("/suggestions").send({
+            spotifyTrackId: "test-track-id",
+            message: "This is a test suggestion for GET endpoint"
+        });
+
+        const suggestionId = createResponse.body.id;
+
         const response = await request(app).get("/suggestions");
+
         expect(response.status).toBe(200);
         expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body).toHaveLength(1);
+        expect(response.body[0]).toHaveProperty("id", suggestionId);
+        expect(response.body[0]).toHaveProperty("spotifyTrackId", "test-track-id");
     });
 });
 
 describe("GET /suggestions/:id", () => {
     it("returns a suggestion by id", async () => {
-        const response = await request(app).get("/suggestions/1");
+        // Create a new suggestion to test on
+        const createResponse = await request(app).post("/suggestions").send({
+            spotifyTrackId: "test-track-id",
+            message: "This is a test suggestion for GET endpoint"
+        });
+
+        const suggestionId = createResponse.body.id;
+        const response = await request(app).get(`/suggestions/${suggestionId}`);
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("id", 1);
+        expect(response.body).toHaveProperty("id", suggestionId);
     });
 
     it("returns 404 if suggestion not found", async () => {
@@ -131,12 +142,12 @@ describe("GET /suggestions/:id", () => {
     });
 });
 
-describe("PATCH /suggestions/:id/status", () => {
+describe("PATCH /suggestions/:id", () => {
     it("updates suggestion status", async () => {
         // Create a new suggestion to test on
         const createResponse = await request(app).post("/suggestions").send({
-            title: "PATCH Test Song",
-            artist: "PATCH Test Artist"
+            spotifyTrackId: "test-track-id",
+            message: "This is a test suggestion for PATCH endpoint"
         });
 
         const suggestionId = createResponse.body.id;
@@ -185,8 +196,8 @@ describe("DELETE /suggestions/:id", () => {
     it("deletes a suggestion", async () => {
         // Create a new suggestion to test on
         const createResponse = await request(app).post("/suggestions").send({
-            title: "Delete Test Song",
-            artist: "Delete Test Artist"
+            spotifyTrackId: "test-track-id",
+            message: "This is a test suggestion for DELETE endpoint"
         });
 
         const suggestionId = createResponse.body.id;

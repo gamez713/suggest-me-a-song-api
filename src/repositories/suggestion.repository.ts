@@ -1,10 +1,12 @@
 import fs from "fs/promises";
 import type { SongSuggestion } from "../models/songSuggestion.model.js";
 
+const suggestionsFile = process.env.SUGGESTIONS_FILE || "data/suggestions.json";
+
 // READ Persistence
 export async function findAllSuggestions(): Promise<SongSuggestion[]> {
 
-    const data = await fs.readFile("data/suggestions.json", "utf-8");
+    const data = await fs.readFile(suggestionsFile, "utf-8");
     return JSON.parse(data);
 }
 
@@ -23,7 +25,7 @@ export async function saveSuggestion(input: SongSuggestion): Promise<SongSuggest
 
     suggestions.push(input);
     await fs.writeFile(
-        "data/suggestions.json",
+        suggestionsFile,
         JSON.stringify(suggestions, null, 2));
 
     return input;
@@ -41,7 +43,7 @@ export async function updateSuggestionById(input: SongSuggestion): Promise<SongS
     suggestions[index] = input;
 
     await fs.writeFile(
-        "data/suggestions.json",
+        suggestionsFile,
         JSON.stringify(suggestions, null, 2)
     );
 
@@ -61,7 +63,7 @@ export async function deleteSuggestionById(id: number): Promise<boolean> {
     }
 
     await fs.writeFile(
-        "data/suggestions.json",
+        suggestionsFile,
         JSON.stringify(filteredSuggestions, null, 2)
     );
 
