@@ -7,8 +7,15 @@ import {
     deleteSuggestionById
 } from "../repositories/suggestion.repository.js";
 
-import { getTrackBySpotifyId, saveTrack } from "../repositories/track.repository.js";
-import { getSpotifyTrack } from "./spotify.service.js";
+import {
+    getTrackBySpotifyId,
+    saveTrack
+} from "../repositories/track.repository.js";
+
+import {
+    addTrackToSpotifyPlaylist,
+    getSpotifyTrack,
+} from "./spotify.service.js";
 
 // READ operations
 export async function getAllSuggestions(): Promise<SongSuggestion[]> {
@@ -71,6 +78,11 @@ export async function updateSuggestionStatus(id: number, status: SongStatus): Pr
     if (!suggestion) {
         return null;
     }
+
+    if (status === "approved") {
+        await addTrackToSpotifyPlaylist(suggestion.spotifyTrackId);
+    }
+
     suggestion.status = status;
 
     await updateSuggestionById(suggestion);

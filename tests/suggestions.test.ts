@@ -1,6 +1,7 @@
 import app from "../src/app.js";
 import request from "supertest";
 import { describe, it, expect, vi } from "vitest";
+import { addTrackToSpotifyPlaylist, getSpotifyTrack } from "../src/services/spotify.service.js";
 
 vi.mock("../src/services/spotify.service.js", () => ({
     getSpotifyTrack: vi.fn().mockResolvedValue({
@@ -22,6 +23,7 @@ vi.mock("../src/services/spotify.service.js", () => ({
         explicit: false,
         popularity: 50,
     }),
+    addTrackToSpotifyPlaylist: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("POST /suggestions", () => {
@@ -159,6 +161,27 @@ describe("PATCH /suggestions/:id", () => {
         expect(response.status).toBe(200);
         expect(response.body).toHaveProperty("id", suggestionId);
         expect(response.body).toHaveProperty("status", "approved");
+    });
+
+    it("keeps suggestion pending if adding it to Spotify fails", async () => {
+        const createResponse = await request(app).post("/suggestions").send({
+            spotifyTrackId: "test-track-id",
+            message: "This is a Spotify failure test"
+        });
+
+        const suggestionId = createResponse.body.id;
+        vi.mocked(addTrackToSpotifyPlaylist).mockRejectedValueOnce(
+            new Error("Spotify playlist request failed")
+        );
+
+        const updateResponse = await request(app).patch(`/suggestions/${suggestionId}`).send({
+            status: "approved"
+        });
+        expect(updateResponse.status).toBe(500);
+
+        const getResponse = await request(app).get(`/suggestions/${suggestionId}`);
+        expect(getResponse.status).toBe(200);
+        expect(getResponse.body).toHaveProperty("status", "pending");
     });
 
     it("returns 400 if parameter id is invalid", async () => {

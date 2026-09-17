@@ -183,3 +183,33 @@ export async function searchSpotifyTracks(
         spotifyUrl: track.external_urls.spotify,
     }));
 }
+
+export async function addTrackToSpotifyPlaylist(spotifyTrackId: string): Promise<void> {
+    const accessToken = getStoredSpotifyAccessToken();
+
+    if (!accessToken) {
+        throw new Error("Spotify access token is not available. Authorize with Spotify first.");
+    }
+
+    const playlistId = process.env.SPOTIFY_PLAYLIST_ID;
+
+    if (!playlistId) {
+        throw new Error("Spotify playlist ID is not configured. Set SPOTIFY_PLAYLIST_ID in environment variables.");
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}/items`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            uris: [`spotify:track:${spotifyTrackId}`],
+        }),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add track to Spotify playlist: ${response.status} ${errorText}`);
+    }
+}
