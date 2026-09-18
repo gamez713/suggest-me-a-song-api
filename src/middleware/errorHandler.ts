@@ -1,9 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 
 export function errorHandler(
-    err: Error, req: Request, res: Response, next: NextFunction
+    err: Error,
+    _req: Request,
+    res: Response,
+    _next: NextFunction
 ) {
     console.error(err);
 
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
 }

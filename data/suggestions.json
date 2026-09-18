@@ -1,16 +1,16 @@
 [
-  {
-    "id": 1,
-    "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
-    "status": "approved",
-    "createdAt": "2026-09-16T00:37:15.013Z",
-    "message": "First suggestion"
-  },
-  {
-    "id": 2,
-    "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
-    "status": "pending",
-    "createdAt": "2026-09-16T00:40:40.255Z",
-    "message": "Second suggestion"
-  }
+    {
+        "id": 1,
+        "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
+        "status": "approved",
+        "createdAt": "2026-09-16T00:37:15.013Z",
+        "message": "First suggestion"
+    },
+    {
+        "id": 2,
+        "spotifyTrackId": "4bQ7mjty0UVlKRalhizpGT",
+        "status": "pending",
+        "createdAt": "2026-09-16T00:40:40.255Z",
+        "message": "Second suggestion"
+    }
 ]

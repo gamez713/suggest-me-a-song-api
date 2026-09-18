@@ -5,24 +5,22 @@ import {
     getAllSuggestions,
     getSuggestionById,
     updateSuggestionStatus,
-    deleteSuggestion
-} from "../services/suggestions.service.js";
+    deleteSuggestion,
+} from "../services/suggestion.service.js";
 
-// READ operations
-export async function getSuggestionsHandler(req: Request, res: Response) {
+export async function getAllSuggestionsHandler(req: Request, res: Response) {
     const suggestions = await getAllSuggestions();
 
     return res.status(200).json(suggestions);
 }
 
 export async function getSuggestionByIdHandler(req: Request, res: Response) {
-    const id = parseInt(req.params.id as string, 10);
+    const id = Number(req.params.id as string);
 
-    if (isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({ error: "Invalid id parameter" });
     }
 
-    // Get suggestion by id from service
     const suggestion = await getSuggestionById(id);
 
     if (!suggestion) {
@@ -32,17 +30,16 @@ export async function getSuggestionByIdHandler(req: Request, res: Response) {
     return res.status(200).json(suggestion);
 }
 
-// CREATE operations
 export async function createSuggestionHandler(req: Request, res: Response) {
     const { spotifyTrackId, message } = req.body;
 
-    // Validate required fields
     if (!spotifyTrackId) {
         return res.status(400).json({ error: "Spotify track ID is required" });
     }
-    // Validate types
     if (typeof spotifyTrackId !== "string") {
-        return res.status(400).json({ error: "Spotify track ID must be a string" });
+        return res
+            .status(400)
+            .json({ error: "Spotify track ID must be a string" });
     }
     if (message !== undefined && typeof message !== "string") {
         return res.status(400).json({ error: "Message must be a string" });
@@ -51,20 +48,18 @@ export async function createSuggestionHandler(req: Request, res: Response) {
     const trimmedSpotifyTrackId = spotifyTrackId.trim();
     const trimmedMessage = message?.trim();
 
-    // Empty string check
     if (trimmedSpotifyTrackId === "") {
-        return res.status(400).json({ error: "Spotify track ID cannot be empty" });
+        return res
+            .status(400)
+            .json({ error: "Spotify track ID cannot be empty" });
     }
 
-    // Length check
-    if (trimmedSpotifyTrackId.length > 100) {
-        return res.status(400).json({ error: "Spotify track ID exceeds maximum length" });
-    }
     if (trimmedMessage !== undefined && trimmedMessage.length > 500) {
-        return res.status(400).json({ error: "Message exceeds maximum length" });
+        return res
+            .status(400)
+            .json({ error: "Message exceeds maximum length" });
     }
 
-    // Pass validated and trimmed data to service
     const newSuggestion = await createSuggestion({
         spotifyTrackId: trimmedSpotifyTrackId,
         message: trimmedMessage,
@@ -73,24 +68,27 @@ export async function createSuggestionHandler(req: Request, res: Response) {
     return res.status(201).json(newSuggestion);
 }
 
-// UPDATE operations
-export async function updateSuggestionStatusHandler(req: Request, res: Response) {
-    const id = parseInt(req.params.id as string, 10);
+export async function updateSuggestionStatusHandler(
+    req: Request,
+    res: Response
+) {
+    const id = Number(req.params.id as string);
     const { status } = req.body;
     const validStatuses: SongStatus[] = ["pending", "approved", "rejected"];
 
-    if (isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({ error: "Invalid id parameter" });
     }
 
-    // Validate status
-    if (typeof status !== "string" || !validStatuses.includes(status as SongStatus)) {
+    if (
+        typeof status !== "string" ||
+        !validStatuses.includes(status as SongStatus)
+    ) {
         return res.status(400).json({ error: "Invalid status value" });
     }
 
     const validatedStatus = status as SongStatus;
 
-    // Update suggestion status in service
     const updatedSuggestion = await updateSuggestionStatus(id, validatedStatus);
 
     if (!updatedSuggestion) {
@@ -99,11 +97,10 @@ export async function updateSuggestionStatusHandler(req: Request, res: Response)
     return res.status(200).json(updatedSuggestion);
 }
 
-// DELETE operations
 export async function deleteSuggestionHandler(req: Request, res: Response) {
-    const id = parseInt(req.params.id as string, 10);
+    const id = Number(req.params.id as string);
 
-    if (isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({ error: "Invalid id parameter" });
     }
 

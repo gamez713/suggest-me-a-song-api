@@ -3,38 +3,40 @@ import type { SongSuggestion } from "../models/songSuggestion.model.js";
 
 const suggestionsFile = process.env.SUGGESTIONS_FILE || "data/suggestions.json";
 
-// READ Persistence
 export async function findAllSuggestions(): Promise<SongSuggestion[]> {
-
     const data = await fs.readFile(suggestionsFile, "utf-8");
     return JSON.parse(data);
 }
 
-export async function findSuggestionById(id: number): Promise<SongSuggestion | null> {
-
+export async function findSuggestionById(
+    id: number
+): Promise<SongSuggestion | null> {
     const suggestions = await findAllSuggestions();
-    const suggestion = suggestions.find((suggestion) => suggestion.id === id) || null;
+    const suggestion =
+        suggestions.find((suggestion) => suggestion.id === id) || null;
 
     return suggestion;
 }
 
-// CREATE Persistence
-export async function saveSuggestion(input: SongSuggestion): Promise<SongSuggestion> {
-    
+export async function saveSuggestion(
+    input: SongSuggestion
+): Promise<SongSuggestion> {
     const suggestions = await findAllSuggestions();
 
     suggestions.push(input);
-    await fs.writeFile(
-        suggestionsFile,
-        JSON.stringify(suggestions, null, 2));
+
+    await fs.writeFile(suggestionsFile, JSON.stringify(suggestions, null, 2));
 
     return input;
 }
 
-// UPDATE Persistence
-export async function updateSuggestionById(input: SongSuggestion): Promise<SongSuggestion> {
+export async function updateSuggestionById(
+    input: SongSuggestion
+): Promise<SongSuggestion> {
     const suggestions = await findAllSuggestions();
-    const index = suggestions.findIndex((suggestion) => suggestion.id === input.id);
+    const index = suggestions.findIndex(
+        (suggestion) => suggestion.id === input.id
+    );
 
     if (index === -1) {
         throw new Error(`Suggestion with id ${input.id} not found`);
@@ -42,22 +44,17 @@ export async function updateSuggestionById(input: SongSuggestion): Promise<SongS
 
     suggestions[index] = input;
 
-    await fs.writeFile(
-        suggestionsFile,
-        JSON.stringify(suggestions, null, 2)
-    );
+    await fs.writeFile(suggestionsFile, JSON.stringify(suggestions, null, 2));
 
     return input;
 }
 
-// DELETE Persistence
 export async function deleteSuggestionById(id: number): Promise<boolean> {
     const suggestions = await findAllSuggestions();
+    const filteredSuggestions = suggestions.filter(
+        (suggestion) => suggestion.id !== id
+    );
 
-    // Filter out the suggestion with the given id
-    const filteredSuggestions = suggestions.filter((suggestion) => suggestion.id !== id);
-
-    // If no suggestion was removed, return false
     if (filteredSuggestions.length === suggestions.length) {
         return false;
     }

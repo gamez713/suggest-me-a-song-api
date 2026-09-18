@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type {
-    SpotifyTrackMetadata,
+    SpotifyTrack,
     SpotifyTrackSearchResult,
 } from "../models/spotifyTrack.model.js";
 import type {
@@ -11,7 +11,7 @@ import type {
 
 let spotifyAuthState: string | null = null;
 
-// Stored in memory temporarily during development
+// Spotify tokens are temporarily stored in memory during development.
 let spotifyAccessToken: string | null = null;
 let spotifyRefreshToken: string | null = null;
 
@@ -38,13 +38,10 @@ export function getSpotifyAuthorizeUrl(): string {
     return `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
-// Validates the state parameter returned from Spotify's OAuth flow to prevent CSRF attacks
 export function validateSpotifyAuthState(state: string): boolean {
-    // Compare returned state with the one stored during initial authorization request
     const isValid = spotifyAuthState !== null && spotifyAuthState === state;
 
     if (isValid) {
-        // Clear the stored state after successful validation to prevent reuse
         spotifyAuthState = null;
     }
 
@@ -54,7 +51,6 @@ export function validateSpotifyAuthState(state: string): boolean {
 export async function exchangeSpotifyCodeForToken(
     code: string
 ): Promise<SpotifyTokenResponse> {
-    
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     const redirectUri = process.env.SPOTIFY_REDIRECT_URI;
@@ -82,11 +78,13 @@ export async function exchangeSpotifyCodeForToken(
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Spotify token exchange failed: ${response.status} ${errorText}`);
+        throw new Error(
+            `Spotify token exchange failed: ${response.status} ${errorText}`
+        );
     }
 
     const tokenData = (await response.json()) as SpotifyTokenResponse;
-    
+
     spotifyAccessToken = tokenData.access_token;
     spotifyRefreshToken = tokenData.refresh_token ?? null;
 
@@ -101,22 +99,35 @@ export function getStoredSpotifyRefreshToken(): string | null {
     return spotifyRefreshToken;
 }
 
-export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrackMetadata> {
+function requireSpotifyAccessToken(): string {
     const accessToken = getStoredSpotifyAccessToken();
 
     if (!accessToken) {
-        throw new Error("Spotify access token is not available. Authorize with Spotify first.");
+        throw new Error(
+            "Spotify access token is not available. Authorize with Spotify first."
+        );
     }
 
-    const response = await fetch(`https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`, {
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
+    return accessToken;
+}
+
+export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrack> {
+    const accessToken = requireSpotifyAccessToken();
+
+    const response = await fetch(
+        `https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Spotify track request failed: ${response.status} ${errorText}`);
+        throw new Error(
+            `Spotify track request failed: ${response.status} ${errorText}`
+        );
     }
 
     const spotifyTrack = (await response.json()) as SpotifyTrackResponse;
@@ -143,11 +154,7 @@ export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrackMeta
 export async function searchSpotifyTracks(
     query: string
 ): Promise<SpotifyTrackSearchResult[]> {
-    const accessToken = getStoredSpotifyAccessToken();
-
-    if (!accessToken) {
-        throw new Error("Spotify access token is not available. Authorize with Spotify first.");
-    }
+    const accessToken = requireSpotifyAccessToken();
 
     const params = new URLSearchParams({
         q: query,
@@ -155,18 +162,24 @@ export async function searchSpotifyTracks(
         limit: "10",
     });
 
-    const response = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-        },
-    });
+    const response = await fetch(
+        `https://api.spotify.com/v1/search?${params.toString()}`,
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+        }
+    );
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Spotify track search failed: ${response.status} ${errorText}`);
+        throw new Error(
+            `Spotify track search failed: ${response.status} ${errorText}`
+        );
     }
 
-    const searchResponse = (await response.json()) as SpotifyTrackSearchResponse;
+    const searchResponse =
+        (await response.json()) as SpotifyTrackSearchResponse;
 
     return searchResponse.tracks.items.map((track) => ({
         spotifyTrackId: track.id,
@@ -184,32 +197,37 @@ export async function searchSpotifyTracks(
     }));
 }
 
-export async function addTrackToSpotifyPlaylist(spotifyTrackId: string): Promise<void> {
-    const accessToken = getStoredSpotifyAccessToken();
-
-    if (!accessToken) {
-        throw new Error("Spotify access token is not available. Authorize with Spotify first.");
-    }
+export async function addTrackToSpotifyPlaylist(
+    spotifyTrackId: string
+): Promise<void> {
+    const accessToken = requireSpotifyAccessToken();
 
     const playlistId = process.env.SPOTIFY_PLAYLIST_ID;
 
     if (!playlistId) {
-        throw new Error("Spotify playlist ID is not configured. Set SPOTIFY_PLAYLIST_ID in environment variables.");
+        throw new Error(
+            "Spotify playlist ID is not configured. Set SPOTIFY_PLAYLIST_ID in environment variables."
+        );
     }
 
-    const response = await fetch(`https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}/items`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            uris: [`spotify:track:${spotifyTrackId}`],
-        }),
-    });
+    const response = await fetch(
+        `https://api.spotify.com/v1/playlists/${encodeURIComponent(playlistId)}/items`,
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                uris: [`spotify:track:${spotifyTrackId}`],
+            }),
+        }
+    );
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to add track to Spotify playlist: ${response.status} ${errorText}`);
+        throw new Error(
+            `Failed to add track to Spotify playlist: ${response.status} ${errorText}`
+        );
     }
 }

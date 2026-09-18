@@ -1,16 +1,16 @@
 import { Router } from "express";
 import {
     createSuggestionHandler,
-    getSuggestionsHandler,
+    getAllSuggestionsHandler,
     getSuggestionByIdHandler,
     updateSuggestionStatusHandler,
-    deleteSuggestionHandler
-} from "../controllers/suggestions.controller.js";
+    deleteSuggestionHandler,
+} from "../controllers/suggestion.controller.js";
 
 const router = Router();
 
 router.post("/", createSuggestionHandler);
-router.get("/", getSuggestionsHandler);
+router.get("/", getAllSuggestionsHandler);
 router.get("/:id", getSuggestionByIdHandler);
 router.patch("/:id", updateSuggestionStatusHandler);
 router.delete("/:id", deleteSuggestionHandler);

@@ -1,9 +1,9 @@
 import { Router } from "express";
 import {
-  loginHandler,
-  callbackHandler,
-  getTrackHandler,
-  searchTracksHandler,
+    loginHandler,
+    callbackHandler,
+    getTrackHandler,
+    searchTracksHandler,
 } from "../controllers/spotify.controller.js";
 
 const router = Router();

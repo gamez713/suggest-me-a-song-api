@@ -1,5 +1,5 @@
 import express from "express";
-import suggestionsRoutes from "./routes/suggestions.routes.js";
+import suggestionsRoutes from "./routes/suggestion.routes.js";
 import spotifyRoutes from "./routes/spotify.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 

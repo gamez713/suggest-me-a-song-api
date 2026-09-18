@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction} from "express";
+import type { Request, Response, NextFunction } from "express";
 import {
     exchangeSpotifyCodeForToken,
     getSpotifyAuthorizeUrl,
@@ -18,22 +18,30 @@ export function loginHandler(_req: Request, res: Response, next: NextFunction) {
 }
 
 // Processes Spotify's OAuth callback and exchanges the authorization code for tokens
-export async function callbackHandler(req: Request, res: Response, next: NextFunction) {
+export async function callbackHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
     const { code, state } = req.query;
 
     if (!code || typeof code !== "string") {
-        return res.status(400).json({ error: "Missing or invalid 'code' query parameter" });
+        return res
+            .status(400)
+            .json({ error: "Missing or invalid 'code' query parameter" });
     }
 
     if (!state || typeof state !== "string") {
-        return res.status(400).json({ error: "Missing or invalid 'state' query parameter" });
-    }
-
-    if (!validateSpotifyAuthState(state)) {
-        return res.status(400).json({ error: "Invalid OAuth state" });
+        return res
+            .status(400)
+            .json({ error: "Missing or invalid 'state' query parameter" });
     }
 
     try {
+        if (!validateSpotifyAuthState(state)) {
+            return res.status(400).json({ error: "Invalid OAuth state" });
+        }
+
         await exchangeSpotifyCodeForToken(code);
 
         return res.status(200).json({
@@ -44,7 +52,11 @@ export async function callbackHandler(req: Request, res: Response, next: NextFun
     }
 }
 
-export async function getTrackHandler(req: Request, res: Response, next: NextFunction) {
+export async function getTrackHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
     const { trackId } = req.params;
 
     if (!trackId || typeof trackId !== "string" || trackId.trim() === "") {
@@ -52,18 +64,24 @@ export async function getTrackHandler(req: Request, res: Response, next: NextFun
     }
 
     try {
-        const track = await getSpotifyTrack(trackId);
+        const track = await getSpotifyTrack(trackId.trim());
         return res.status(200).json(track);
     } catch (error) {
         return next(error);
     }
 }
 
-export async function searchTracksHandler(req: Request, res: Response, next: NextFunction) {
+export async function searchTracksHandler(
+    req: Request,
+    res: Response,
+    next: NextFunction
+) {
     const { q } = req.query;
 
     if (typeof q !== "string" || q.trim() === "") {
-        return res.status(400).json({ error: "Missing or invalid 'q' query parameter" });
+        return res
+            .status(400)
+            .json({ error: "Missing or invalid 'q' query parameter" });
     }
 
     try {

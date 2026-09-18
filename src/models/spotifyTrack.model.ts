@@ -1,4 +1,4 @@
-export type SpotifyTrackMetadata = {
+export type SpotifyTrack = {
     spotifyTrackId: string;
     name: string;
     artists: Array<{

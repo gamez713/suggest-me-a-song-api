@@ -10,8 +10,5 @@ beforeEach(async () => {
         "tests/data/suggestions.json",
         JSON.stringify([], null, 2)
     );
-    await fs.writeFile(
-        "tests/data/tracks.json",
-        JSON.stringify([], null, 2)
-    );
+    await fs.writeFile("tests/data/tracks.json", JSON.stringify([], null, 2));
 });
