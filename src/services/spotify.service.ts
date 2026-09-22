@@ -142,6 +142,7 @@ export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrack> {
         album: {
             id: spotifyTrack.album.id,
             name: spotifyTrack.album.name,
+            albumType: spotifyTrack.album.album_type,
             imageUrl: spotifyTrack.album.images[0]?.url ?? null,
         },
         spotifyUrl: spotifyTrack.external_urls.spotify,

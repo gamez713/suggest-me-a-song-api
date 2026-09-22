@@ -16,6 +16,7 @@ export type SpotifyTrackResponse = {
     album: {
         id: string;
         name: string;
+        album_type: string;
         images: Array<{
             url: string;
         }>;

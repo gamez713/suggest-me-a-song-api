@@ -8,6 +8,7 @@ export type SpotifyTrack = {
     album: {
         id: string;
         name: string;
+        albumType: string;
         imageUrl: string | null;
     };
     spotifyUrl: string;
