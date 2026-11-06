@@ -42,32 +42,13 @@ export async function createSuggestion(input: {
         await saveTrack(spotifyTrack);
     }
 
-    const suggestions = await findAllSuggestions();
-
-    let maxId = 0;
-
-    for (const suggestion of suggestions) {
-        if (suggestion.id > maxId) {
-            maxId = suggestion.id;
-        }
-    }
-
-    const newId = maxId + 1;
-
-    const newSuggestion: SongSuggestion = {
-        id: newId,
+    const newSuggestion = {
         spotifyTrackId: input.spotifyTrackId,
-        status: "pending",
-        createdAt: new Date().toISOString(),
+        ...(input.message !== undefined ? { message: input.message } : {}),
+        status: "pending" as const,
     };
 
-    if (input.message !== undefined) {
-        newSuggestion.message = input.message;
-    }
-
-    await saveSuggestion(newSuggestion);
-
-    return newSuggestion;
+    return saveSuggestion(newSuggestion);
 }
 
 export async function updateSuggestionStatus(
@@ -86,9 +67,7 @@ export async function updateSuggestionStatus(
 
     suggestion.status = status;
 
-    await updateSuggestionById(suggestion);
-
-    return suggestion;
+    return updateSuggestionById(suggestion);
 }
 
 export async function deleteSuggestion(id: number): Promise<boolean> {
