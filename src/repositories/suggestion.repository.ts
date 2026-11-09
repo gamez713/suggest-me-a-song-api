@@ -1,9 +1,6 @@
-import fs from "fs/promises";
 import type { SongSuggestion } from "../models/songSuggestion.model.js";
 
 import { pool } from "../db/pool.js";
-
-const suggestionsFile = process.env.SUGGESTIONS_FILE || "data/suggestions.json";
 
 type SuggestionRow = {
     id: number;

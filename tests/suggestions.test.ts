@@ -19,6 +19,7 @@ vi.mock("../src/services/spotify.service.js", () => ({
         album: {
             id: "test-album-id",
             name: "Test Album",
+            albumType: "album",
             imageUrl: null,
         },
         spotifyUrl: "https://open.spotify.com/track/test-track-id",
@@ -252,6 +253,11 @@ describe("DELETE /suggestions/:id", () => {
             "/suggestions/" + suggestionId
         );
         expect(response.status).toBe(204);
+
+        const getResponse = await request(app).get(
+            `/suggestions/${suggestionId}`
+        );
+        expect(getResponse.status).toBe(404);
     });
 
     it("returns 400 if parameter id is invalid", async () => {

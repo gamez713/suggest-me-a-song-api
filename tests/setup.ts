@@ -1,14 +1,23 @@
-import { beforeEach } from "vitest";
-import fs from "fs/promises";
+import { beforeEach, afterAll } from "vitest";
+import { pool } from "../src/db/pool.js";
 
-process.env.SUGGESTIONS_FILE = "tests/data/suggestions.json";
-process.env.TRACKS_FILE = "tests/data/tracks.json";
-
-// Reset the suggestions.json file to an empty array before each test
 beforeEach(async () => {
-    await fs.writeFile(
-        "tests/data/suggestions.json",
-        JSON.stringify([], null, 2)
+    const result = await pool.query<{ current_database: string }>(
+        "SELECT current_database();"
     );
-    await fs.writeFile("tests/data/tracks.json", JSON.stringify([], null, 2));
+
+    if (result.rows[0]?.current_database !== "suggest_me_a_song_test") {
+        throw new Error(
+            "Test database safety check failed: refusing to clear tables"
+        );
+    }
+
+    await pool.query(`
+        TRUNCATE TABLE suggestions, track_artists, tracks, albums, artists
+        RESTART IDENTITY CASCADE;
+    `);
+});
+
+afterAll(async () => {
+    await pool.end();
 });
