@@ -61,6 +61,10 @@ export async function updateSuggestionStatus(
         return null;
     }
 
+    if (suggestion.status === status) {
+        return suggestion;
+    }
+
     if (status === "approved") {
         await addTrackToSpotifyPlaylist(suggestion.spotifyTrackId);
     }
