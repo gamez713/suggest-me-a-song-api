@@ -52,3 +52,10 @@ CREATE TABLE suggestions (
 
     FOREIGN KEY (track_id) REFERENCES tracks(id)
 );
+
+CREATE TABLE spotify_auth (
+    id INTEGER PRIMARY KEY DEFAULT 1
+        CHECK (id = 1),
+    encrypted_refresh_token TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

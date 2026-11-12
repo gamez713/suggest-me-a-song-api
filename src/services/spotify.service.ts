@@ -8,12 +8,18 @@ import type {
     SpotifyTrackSearchResponse,
     SpotifyTrackResponse,
 } from "../types/spotify.types.js";
+import { encryptToken, decryptToken } from "../utils/tokenEncryption.js";
+import {
+    saveEncryptedRefreshToken,
+    getStoredEncryptedRefreshToken,
+} from "../repositories/spotifyAuth.repository.js";
 
 let spotifyAuthState: string | null = null;
 
-// Spotify tokens are temporarily stored in memory during development.
 let spotifyAccessToken: string | null = null;
 let spotifyRefreshToken: string | null = null;
+let spotifyAccessTokenExpiresAt: number | null = null;
+let spotifyRefreshPromise: Promise<string> | null = null;
 
 export function getSpotifyAuthorizeUrl(): string {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
@@ -85,8 +91,17 @@ export async function exchangeSpotifyCodeForToken(
 
     const tokenData = (await response.json()) as SpotifyTokenResponse;
 
+    if (!tokenData.refresh_token) {
+        throw new Error("Spotify did not return a refresh token");
+    }
+
+    const encryptedToken = encryptToken(tokenData.refresh_token);
+
+    await saveEncryptedRefreshToken(encryptedToken);
+
     spotifyAccessToken = tokenData.access_token;
-    spotifyRefreshToken = tokenData.refresh_token ?? null;
+    spotifyRefreshToken = tokenData.refresh_token;
+    spotifyAccessTokenExpiresAt = Date.now() + tokenData.expires_in * 1000;
 
     return tokenData;
 }
@@ -95,24 +110,98 @@ export function getStoredSpotifyAccessToken(): string | null {
     return spotifyAccessToken;
 }
 
-export function getStoredSpotifyRefreshToken(): string | null {
-    return spotifyRefreshToken;
+export async function getStoredSpotifyRefreshToken(): Promise<string | null> {
+    if (spotifyRefreshToken) {
+        return spotifyRefreshToken;
+    }
+
+    const encryptedToken = await getStoredEncryptedRefreshToken();
+
+    if (!encryptedToken) {
+        return null;
+    }
+
+    const refreshToken = decryptToken(encryptedToken);
+
+    spotifyRefreshToken = refreshToken;
+
+    return refreshToken;
 }
 
-function requireSpotifyAccessToken(): string {
-    const accessToken = getStoredSpotifyAccessToken();
+async function refreshSpotifyAccessToken(): Promise<string> {
+    const refreshToken = await getStoredSpotifyRefreshToken();
 
-    if (!accessToken) {
+    if (!refreshToken) {
         throw new Error(
-            "Spotify access token is not available. Authorize with Spotify first."
+            "Spotify refresh token is not available. Authorize with Spotify first."
         );
     }
 
-    return accessToken;
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+        throw new Error("Spotify client credentials are not configured.");
+    }
+
+    const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+    });
+
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+        },
+        body: body.toString(),
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            `Spotify token refresh failed with status ${response.status}`
+        );
+    }
+
+    const tokenData = (await response.json()) as SpotifyTokenResponse;
+
+    if (tokenData.refresh_token) {
+        const encryptedToken = encryptToken(tokenData.refresh_token);
+
+        await saveEncryptedRefreshToken(encryptedToken);
+
+        spotifyRefreshToken = tokenData.refresh_token;
+    }
+
+    spotifyAccessToken = tokenData.access_token;
+    spotifyAccessTokenExpiresAt = Date.now() + tokenData.expires_in * 1000;
+
+    return tokenData.access_token;
+}
+
+async function requireSpotifyAccessToken(): Promise<string> {
+    const refreshBufferMs = 60_000;
+
+    if (
+        spotifyAccessToken &&
+        spotifyAccessTokenExpiresAt !== null &&
+        Date.now() < spotifyAccessTokenExpiresAt - refreshBufferMs
+    ) {
+        return spotifyAccessToken;
+    }
+
+    if (!spotifyRefreshPromise) {
+        spotifyRefreshPromise = refreshSpotifyAccessToken().finally(() => {
+            spotifyRefreshPromise = null;
+        });
+    }
+
+    return spotifyRefreshPromise;
 }
 
 export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrack> {
-    const accessToken = requireSpotifyAccessToken();
+    const accessToken = await requireSpotifyAccessToken();
 
     const response = await fetch(
         `https://api.spotify.com/v1/tracks/${encodeURIComponent(trackId)}`,
@@ -155,7 +244,7 @@ export async function getSpotifyTrack(trackId: string): Promise<SpotifyTrack> {
 export async function searchSpotifyTracks(
     query: string
 ): Promise<SpotifyTrackSearchResult[]> {
-    const accessToken = requireSpotifyAccessToken();
+    const accessToken = await requireSpotifyAccessToken();
 
     const params = new URLSearchParams({
         q: query,
@@ -201,7 +290,7 @@ export async function searchSpotifyTracks(
 export async function addTrackToSpotifyPlaylist(
     spotifyTrackId: string
 ): Promise<void> {
-    const accessToken = requireSpotifyAccessToken();
+    const accessToken = await requireSpotifyAccessToken();
 
     const playlistId = process.env.SPOTIFY_PLAYLIST_ID;
 
