@@ -13,7 +13,13 @@ beforeEach(async () => {
     }
 
     await pool.query(`
-        TRUNCATE TABLE suggestions, track_artists, tracks, albums, artists
+        TRUNCATE TABLE
+            spotify_auth,
+            suggestions,
+            track_artists,
+            tracks,
+            albums,
+            artists
         RESTART IDENTITY CASCADE;
     `);
 });
