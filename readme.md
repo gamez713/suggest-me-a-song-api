@@ -126,7 +126,11 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Update `.env` with your Spotify API credentials, playlist ID, and PostgreSQL connection settings.
+Configure `.env` with:
+- PostgreSQL connection settings
+- Spotify client ID, client secret, playlist ID, and redirect URI
+- ADMIN_API_KEY for protected administrative endpoints
+- TOKEN_ENCRYPTION_KEY for encrypting stored Spotify refresh tokens (64 hexadecimal characters)
 
 Ensure `SPOTIFY_REDIRECT_URI` matches the redirect URI configured in your Spotify Developer Dashboard.
 
@@ -136,9 +140,21 @@ Ensure `SPOTIFY_REDIRECT_URI` matches the redirect URI configured in your Spotif
 npm run dev
 ```
 
-Authorize the application with Spotify by visiting:
+### Spotify Authorization
+Spotify authorization is required before accessing endpoints that use the Spotify API.
 
-[http://localhost:3000/spotify/login](http://localhost:3000/spotify/login)
+Request an authorization URL using your admin API key:
+
+```bash
+curl http://localhost:3000/spotify/login \
+  -H "x-admin-key: YOUR_ADMIN_API_KEY"
+```
+
+Open the returned authorizeUrl in your browser and approve the requested Spotify permissions.
+
+After successful authorization, the refresh token is encrypted and stored in PostgreSQL. 
+
+Access tokens are refreshed automatically, allowing authentication to persist across server restarts.
 
 ## Creating a Suggestion
 
@@ -199,14 +215,13 @@ npm run format:check
 
 ## Current Limitations
 
-- Spotify OAuth tokens are currently stored in memory and are lost when the server restarts.
-- Spotify access-token refresh is not yet automated.
-- Approval endpoints do not yet have owner authentication.
 - The project currently provides a backend API without a frontend interface.
+- Administrative actions use API-key authentication rather than a dedicated user authentication system.
+- Spotify OAuth authorization state is stored in memory, requiring a single application instance during authorization.
+- The application has not yet been deployed.
 
 ## Planned Improvements
 
-- Add a React frontend for searching and submitting songs
-- Add authentication for administrative approval actions
-- Improve Spotify token persistence and refresh handling
-- Deploy the full-stack application
+- Deploy the API with Render and PostgreSQL on Neon.
+- Build a React frontend for searching and submitting songs.
+- Integrate the frontend with the deployed API.
