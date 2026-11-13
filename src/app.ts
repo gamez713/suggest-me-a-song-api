@@ -19,17 +19,15 @@ app.use(rateLimit({
 app.use(express.json());
 
 // Debug route for production environment
-if (process.env.NODE_ENV === "production") {
-    app.get("/debug/ip", (req, res) => {
-        console.log({
-            resolvedIp: req.ip,
-            socketIp: req.socket.remoteAddress,
-            forwardedFor: req.headers["x-forwarded-for"],
-        });
-
-        res.sendStatus(204);
+app.get("/debug/ip", (req, res) => {
+    console.log({
+        resolvedIp: req.ip,
+        socketIp: req.socket.remoteAddress,
+        forwardedFor: req.headers["x-forwarded-for"],
     });
-}
+
+    res.sendStatus(204);
+});
 
 // Routes
 app.use("/suggestions", suggestionsRoutes);
