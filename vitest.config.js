@@ -8,6 +8,7 @@ export default defineConfig({
             TOKEN_ENCRYPTION_KEY: "a".repeat(64),
             SPOTIFY_CLIENT_ID: "test_client_id",
             SPOTIFY_CLIENT_SECRET: "test_client_secret",
+            SPOTIFY_REDIRECT_URI: "http://localhost:3000/spotify/callback",
         },
         setupFiles: ["./tests/setup.ts"],
         fileParallelism: false,

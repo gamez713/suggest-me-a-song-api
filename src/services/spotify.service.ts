@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import type {
     SpotifyTrack,
     SpotifyTrackSearchResult,
@@ -14,7 +14,12 @@ import {
     getStoredEncryptedRefreshToken,
 } from "../repositories/spotifyAuth.repository.js";
 
-let spotifyAuthState: string | null = null;
+let spotifyAuthState: {
+    value: string;
+    expiresAt: number;
+} | null = null;
+
+const SPOTIFY_AUTH_STATE_TTL_MS = 5 * 60 * 1000;
 
 let spotifyAccessToken: string | null = null;
 let spotifyRefreshToken: string | null = null;
@@ -31,27 +36,52 @@ export function getSpotifyAuthorizeUrl(): string {
         );
     }
 
-    spotifyAuthState = randomBytes(32).toString("hex");
+    if (spotifyAuthState && Date.now() < spotifyAuthState.expiresAt) {
+        throw new Error("Spotify authorization is already in progress.");
+    }
+
+    spotifyAuthState = {
+        value: randomBytes(32).toString("hex"),
+        expiresAt: Date.now() + SPOTIFY_AUTH_STATE_TTL_MS,
+    };
 
     const params = new URLSearchParams({
         client_id: clientId,
         response_type: "code",
         redirect_uri: redirectUri,
         scope: "playlist-modify-public",
-        state: spotifyAuthState,
+        state: spotifyAuthState.value,
     });
 
     return `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
 export function validateSpotifyAuthState(state: string): boolean {
-    const isValid = spotifyAuthState !== null && spotifyAuthState === state;
-
-    if (isValid) {
-        spotifyAuthState = null;
+    if (!spotifyAuthState) {
+        return false;
     }
 
-    return isValid;
+    const storedState = spotifyAuthState;
+
+    // Consume the state so it cannot be reused.
+    spotifyAuthState = null;
+
+    if (Date.now() >= storedState.expiresAt) {
+        return false;
+    }
+
+    if (!/^[a-f0-9]{64}$/.test(state)) {
+        return false;
+    }
+
+    const expected = Buffer.from(storedState.value, "hex");
+    const provided = Buffer.from(state, "hex");
+
+    if (expected.length !== provided.length) {
+        return false;
+    }
+
+    return timingSafeEqual(expected, provided);
 }
 
 export async function exchangeSpotifyCodeForToken(

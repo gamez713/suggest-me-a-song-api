@@ -11,7 +11,9 @@ import {
 export function loginHandler(_req: Request, res: Response, next: NextFunction) {
     try {
         const authorizeUrl = getSpotifyAuthorizeUrl();
-        return res.redirect(authorizeUrl);
+        return res.status(200).json({
+            authorizeUrl,
+        });
     } catch (error) {
         return next(error);
     }
