@@ -4,6 +4,7 @@ import spotifyRoutes from "./routes/spotify.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { isIP } from "node:net";
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
+import helmet from "helmet";
 
 const app = express();
 
@@ -25,18 +26,9 @@ const limiter = rateLimit({
 });
 
 // Middleware
+app.use(helmet());
 app.use(limiter);
-app.use(express.json());
-
-// Temporary diagnostic route
- app.get("/debug/ip", (req, res) => {
-    res.json({
-        resolvedIp: req.ip,
-        socketIp: req.socket.remoteAddress,
-        forwardedFor: req.headers["x-forwarded-for"],
-        cfConnectingIp: req.headers["cf-connecting-ip"],
-    });
-});
+app.use(express.json({ limit: "10kb" }));
 
 // Routes
 app.use("/suggestions", suggestionsRoutes);
