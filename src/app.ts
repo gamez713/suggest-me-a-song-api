@@ -31,6 +31,16 @@ app.use(limiter);
 app.use(express.json({ limit: "10kb" }));
 
 // Routes
+app.get("/", (_req, res) => {
+    res.json({
+        name: "Suggest Me a Song API",
+        status: "running",
+        endpoints: {
+            search: "/spotify/search?q=Radiohead",
+            suggestions: "/suggestions",
+        },
+    });
+});
 app.use("/suggestions", suggestionsRoutes);
 app.use("/spotify", spotifyRoutes);
 
