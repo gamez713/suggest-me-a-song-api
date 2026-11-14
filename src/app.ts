@@ -29,15 +29,13 @@ app.use(limiter);
 app.use(express.json());
 
 // Temporary diagnostic route
-app.get("/debug/ip", (req, res) => {
-    console.log({
+ app.get("/debug/ip", (req, res) => {
+    res.json({
         resolvedIp: req.ip,
         socketIp: req.socket.remoteAddress,
         forwardedFor: req.headers["x-forwarded-for"],
         cfConnectingIp: req.headers["cf-connecting-ip"],
     });
-
-    res.sendStatus(204);
 });
 
 // Routes
