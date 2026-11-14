@@ -1,9 +1,7 @@
 import app from "../src/app.js";
 import request from "supertest";
-import { describe, it, expect, vi, beforeEach} from "vitest";
-import {
-    addTrackToSpotifyPlaylist,
-} from "../src/services/spotify.service.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { addTrackToSpotifyPlaylist } from "../src/services/spotify.service.js";
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -168,11 +166,9 @@ describe("GET /suggestions/:id", () => {
 
 describe("PATCH /suggestions/:id", () => {
     it("returns 401 if admin key is missing", async () => {
-        const response = await request(app)
-            .patch("/suggestions/1")
-            .send({
-                status: "approved",
-            });
+        const response = await request(app).patch("/suggestions/1").send({
+            status: "approved",
+        });
 
         expect(response.status).toBe(401);
         expect(response.body).toHaveProperty("error", "Unauthorized");
@@ -252,7 +248,7 @@ describe("PATCH /suggestions/:id", () => {
             .set("x-admin-key", "test_admin_key")
             .send({
                 status: "invalidStatus",
-        });
+            });
         expect(response.status).toBe(400);
         expect(response.body).toHaveProperty("error", "Invalid status value");
     });
@@ -277,11 +273,9 @@ describe("PATCH /suggestions/:id", () => {
         expect(response.body).toHaveProperty("error", "Suggestion not found");
     });
     it("does not add a track to Spotify twice when already approved", async () => {
-        const createResponse = await request(app)
-            .post("/suggestions")
-            .send({
-                spotifyTrackId: "test-track-id",
-            });
+        const createResponse = await request(app).post("/suggestions").send({
+            spotifyTrackId: "test-track-id",
+        });
 
         const suggestionId = createResponse.body.id;
 
@@ -305,22 +299,22 @@ describe("PATCH /suggestions/:id", () => {
 
 describe("DELETE /suggestions/:id", () => {
     it("does not delete a suggestion without an admin key", async () => {
-        const createResponse = await request(app)
-            .post("/suggestions")
-            .send({
-                spotifyTrackId: "test-track-id",
-            });
+        const createResponse = await request(app).post("/suggestions").send({
+            spotifyTrackId: "test-track-id",
+        });
 
         const suggestionId = createResponse.body.id;
 
-        const deleteResponse = await request(app)
-            .delete(`/suggestions/${suggestionId}`);
+        const deleteResponse = await request(app).delete(
+            `/suggestions/${suggestionId}`
+        );
 
         expect(deleteResponse.status).toBe(401);
         expect(deleteResponse.body).toHaveProperty("error", "Unauthorized");
 
-        const getResponse = await request(app)
-            .get(`/suggestions/${suggestionId}`);
+        const getResponse = await request(app).get(
+            `/suggestions/${suggestionId}`
+        );
 
         expect(getResponse.status).toBe(200);
     });
@@ -334,8 +328,7 @@ describe("DELETE /suggestions/:id", () => {
 
         const response = await request(app)
             .delete("/suggestions/" + suggestionId)
-            .set("x-admin-key", "test_admin_key"
-            );
+            .set("x-admin-key", "test_admin_key");
         expect(response.status).toBe(204);
 
         const getResponse = await request(app).get(
