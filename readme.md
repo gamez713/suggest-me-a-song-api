@@ -66,23 +66,22 @@ Track persistence uses PostgreSQL transactions to ensure related album, artist, 
 
 ### Suggestions
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/suggestions` | Retrieve all suggestions |
-| GET | `/suggestions/:id` | Retrieve a suggestion by ID |
-| POST | `/suggestions` | Create a suggestion |
-| PATCH | `/suggestions/:id` | Update suggestion status |
-| DELETE | `/suggestions/:id` | Delete a suggestion |
+| Method | Endpoint           | Description                 |
+| ------ | ------------------ | --------------------------- |
+| GET    | `/suggestions`     | Retrieve all suggestions    |
+| GET    | `/suggestions/:id` | Retrieve a suggestion by ID |
+| POST   | `/suggestions`     | Create a suggestion         |
+| PATCH  | `/suggestions/:id` | Update suggestion status    |
+| DELETE | `/suggestions/:id` | Delete a suggestion         |
 
 ### Spotify
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/spotify/login` | Begin Spotify authorization |
-| GET | `/spotify/callback` | Handle the Spotify OAuth callback |
-| GET | `/spotify/search?q={query}` | Search for Spotify tracks |
-| GET | `/spotify/track/:trackId` | Retrieve Spotify track metadata |
-
+| Method | Endpoint                    | Description                       |
+| ------ | --------------------------- | --------------------------------- |
+| GET    | `/spotify/login`            | Begin Spotify authorization       |
+| GET    | `/spotify/callback`         | Handle the Spotify OAuth callback |
+| GET    | `/spotify/search?q={query}` | Search for Spotify tracks         |
+| GET    | `/spotify/track/:trackId`   | Retrieve Spotify track metadata   |
 
 ## Getting Started
 
@@ -127,6 +126,7 @@ cp .env.example .env
 ```
 
 Configure `.env` with:
+
 - PostgreSQL connection settings
 - Spotify client ID, client secret, playlist ID, and redirect URI
 - ADMIN_API_KEY for protected administrative endpoints
@@ -141,6 +141,7 @@ npm run dev
 ```
 
 ### Spotify Authorization
+
 Spotify authorization is required before accessing endpoints that use the Spotify API.
 
 Request an authorization URL using your admin API key:
@@ -152,7 +153,7 @@ curl http://localhost:3000/spotify/login \
 
 Open the returned authorizeUrl in your browser and approve the requested Spotify permissions.
 
-After successful authorization, the refresh token is encrypted and stored in PostgreSQL. 
+After successful authorization, the refresh token is encrypted and stored in PostgreSQL.
 
 Access tokens are refreshed automatically, allowing authentication to persist across server restarts.
 
